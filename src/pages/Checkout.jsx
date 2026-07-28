@@ -76,8 +76,25 @@ export default function Checkout() {
       clearCart();
     } catch (error) {
       console.error('Erro no checkout:', error);
-      const errorMessage = error.response?.data?.error || error.message || 'Erro ao processar pagamento';
-      alert(`Erro: ${errorMessage}\n\nVerifique se o backend está rodando no Render.`);
+      console.error('Status:', error.response?.status);
+      console.error('Data:', error.response?.data);
+      console.error('URL:', error.config?.url);
+      
+      let errorMessage = 'Erro ao processar pagamento';
+      
+      if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+        errorMessage = 'Backend não encontrado. Verifique se o Render está rodando.';
+      } else if (error.response?.status === 404) {
+        errorMessage = 'API não encontrada. Verifique a URL do backend.';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Erro interno no servidor. Verifique os logs no Render.';
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(`Erro: ${errorMessage}\n\nVerifique o console (F12) para mais detalhes.`);
     } finally {
       setLoading(false);
     }
