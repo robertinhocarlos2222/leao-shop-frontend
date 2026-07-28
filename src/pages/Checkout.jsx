@@ -21,7 +21,16 @@ export default function Checkout() {
     email: '',
     document: '',
     phone: '',
-    method: 'pix'
+    method: 'pix',
+    installments: 1
+  });
+
+  const [cardData, setCardData] = useState({
+    number: '',
+    holder: '',
+    expMonth: '',
+    expYear: '',
+    cvv: ''
   });
 
   useEffect(() => {
@@ -33,6 +42,24 @@ export default function Checkout() {
   function handleInputChange(e) {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  }
+
+  function handleCardChange(e) {
+    const { name, value } = e.target;
+    setCardData(prev => ({ ...prev, [name]: value }));
+  }
+
+  function formatCardNumber(value) {
+    const digits = value.replace(/\D/g, '').slice(0, 16);
+    return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+  }
+
+  function formatExpiry(value) {
+    const digits = value.replace(/\D/g, '').slice(0, 4);
+    if (digits.length >= 2) {
+      return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    }
+    return digits;
   }
 
   function formatDocument(value) {
@@ -75,9 +102,17 @@ export default function Checkout() {
           name: formData.name,
           email: formData.email,
           document: formData.document.replace(/\D/g, ''),
-          phone: formData.phone.replace(/\D/g, '')
+          phone: formData.phone.replace(/\D/g, ''),
+          card: formData.method === 'card' ? {
+            number: cardData.number.replace(/\s/g, ''),
+            holder: cardData.holder,
+            expMonth: cardData.expMonth.split('/')[0] || '',
+            expYear: cardData.expYear || cardData.expiry.split('/')[1] || '',
+            cvv: cardData.cvv
+          } : undefined
         },
-        method: formData.method
+        method: formData.method,
+        installments: formData.installments
       };
 
       const result = await createCheckout(payload);
@@ -360,6 +395,95 @@ export default function Checkout() {
                       <p className="text-xs text-gray-500 mt-1">Vence em 3 dias</p>
                     </button>
                   </div>
+
+                  {/* Card Details */}
+                  {formData.method === 'card' && (
+                    <div className="mt-6 space-y-4">
+                      <h3 className="text-lg font-heading font-semibold text-white">Dados do Cartão</h3>
+                      
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-2">Número do Cartão *</label>
+                        <input
+                          type="text"
+                          name="number"
+                          value={cardData.number}
+                          onChange={handleCardChange}
+                          required
+                          placeholder="1234 5678 9012 3456"
+                          maxLength="19"
+                          className="input-field"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-2">Nome no Cartão *</label>
+                        <input
+                          type="text"
+                          name="holder"
+                          value={cardData.holder}
+                          onChange={handleCardChange}
+                          required
+                          placeholder="JOÃO SILVA"
+                          className="input-field"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm text-gray-400 mb-2">Mês *</label>
+                          <input
+                            type="text"
+                            name="expMonth"
+                            value={cardData.expMonth}
+                            onChange={handleCardChange}
+                            required
+                            placeholder="MM"
+                            maxLength="2"
+                            className="input-field"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-400 mb-2">Ano *</label>
+                          <input
+                            type="text"
+                            name="expYear"
+                            value={cardData.expYear}
+                            onChange={handleCardChange}
+                            required
+                            placeholder="YYYY"
+                            maxLength="4"
+                            className="input-field"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-400 mb-2">CVV *</label>
+                          <input
+                            type="text"
+                            name="cvv"
+                            value={cardData.cvv}
+                            onChange={handleCardChange}
+                            required
+                            placeholder="123"
+                            maxLength="4"
+                            className="input-field"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-2">Parcelas *</label>
+                        <select
+                          value={formData.installments}
+                          onChange={(e) => setFormData(prev => ({ ...prev, installments: parseInt(e.target.value) }))}
+                          className="input-field"
+                        >
+                          {[1,2,3,4,5,6,7,8,9,10,11,12].map(x => (
+                            <option key={x} value={x}>{x}x de {formatPrice(Math.round(cartTotal / x))}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <button
