@@ -116,13 +116,21 @@ export default function Checkout() {
                   Escaneie o QR Code ou copie o código PIX para pagar
                 </p>
 
-                {transaction.qrCodeUrl && (
+                {(transaction.qrCodeUrl || transaction.qrCode) && (
                   <div className="mb-8">
-                    <img
-                      src={transaction.qrCodeUrl}
-                      alt="QR Code PIX"
-                      className="w-64 h-64 mx-auto rounded-2xl bg-white p-4"
-                    />
+                    {transaction.qrCodeUrl ? (
+                      <img
+                        src={transaction.qrCodeUrl}
+                        alt="QR Code PIX"
+                        className="w-64 h-64 mx-auto rounded-2xl bg-white p-4"
+                      />
+                    ) : (
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(transaction.qrCode)}`}
+                        alt="QR Code PIX"
+                        className="w-64 h-64 mx-auto rounded-2xl bg-white p-4"
+                      />
+                    )}
                   </div>
                 )}
 
