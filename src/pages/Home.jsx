@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { HiArrowRight, HiLightningBolt, HiShieldCheck, HiTruck, HiCreditCard } from 'react-icons/hi';
 import { getProducts } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 function formatPrice(cents) {
   return `R$ ${(cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -20,6 +21,7 @@ const staggerContainer = {
 };
 
 export default function Home() {
+  const navigate = useNavigate();
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -137,6 +139,18 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Admin Button (discreto) */}
+      <motion.button
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.3 }}
+        whileHover={{ opacity: 1 }}
+        onClick={() => navigate('/admin/login')}
+        className="fixed bottom-4 right-4 z-50 text-gray-500 hover:text-primary-400 text-xs font-mono"
+        title="Admin"
+      >
+        ⚙️
+      </motion.button>
 
       {/* Benefits */}
       <section className="py-16 -mt-20 relative z-10">
