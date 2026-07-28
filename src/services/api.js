@@ -4,13 +4,11 @@ const API_URL = import.meta.env.VITE_API_URL || '';
 
 const api = axios.create({
   baseURL: API_URL ? `${API_URL}/api` : '/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
   timeout: 5000,
 });
 
-// Dados completos dos produtos (fallback offline)
+// ===================== DADOS DOS PRODUTOS =====================
 const productsData = [
   { id: 1, name: "IGNITE V15", brand: "Ignite", category: "Pods Descartáveis", puffs: 1500, price: 4290, originalPrice: 5490, installments: { times: 2, value: 2145 }, flavors: ["Menta", "Frutas Vermelhas", "Melancia", "Uva", "Morango"], image: "/images/ignite-v15.jpg", badge: null, featured: false },
   { id: 2, name: "IGNITE V50", brand: "Ignite", category: "Pods Descartáveis", puffs: 5000, battery: "650 mAh", price: 7999, originalPrice: 9490, installments: { times: 4, value: 1999 }, flavors: ["Menta", "Frutas Vermelhas", "Melancia", "Uva", "Morango", "Pêssego", "Manga"], image: "/images/ignite-v50.webp", badge: null, featured: true },
@@ -62,13 +60,14 @@ const productsData = [
   { id: 48, name: "Kit Econômico 2 Pods Lite 3000", brand: "Outros", category: "Kits Promocionais", puffs: null, battery: "2 Pods Lite 3000", price: 8990, originalPrice: null, installments: { times: 4, value: 2248 }, flavors: [], image: null, badge: "KIT", featured: false }
 ];
 
-// Tenta carregar da API, se falhar usa dados locais
+// ===================== FUNÇÕES =====================
+
+// Produtos (com fallback offline)
 export const getProducts = async (params = {}) => {
   try {
     const { data } = await api.get('/products', { params });
     return data;
-  } catch (error) {
-    console.log('API offline, usando dados locais');
+  } catch {
     let filtered = [...productsData];
     const { category, brand, search, featured } = params;
     if (category) filtered = filtered.filter(p => p.category === category);
@@ -86,11 +85,53 @@ export const getProduct = async (id) => {
   try {
     const { data } = await api.get(`/products/${id}`);
     return data;
-  } catch (error) {
-    console.log('API offline, usando dados locais');
+  } catch {
     const product = productsData.find(p => p.id === id);
     if (!product) throw new Error('Produto não encontrado');
     return product;
+  }
+};
+
+// Checkout (com fallback SIMULADO para testar)
+export const createCheckout = async (checkoutData) => {
+  try {
+    const { data } = await api.post('/checkout', checkoutData);
+    return data;
+  } catch {
+    // Simula um checkout bem-sucedido (modo offline/demonstração)
+    const totalAmount = checkoutData.items.reduce((sum, item) => {
+      const product = productsData.find(p => p.id === item.id);
+      return sum + (product ? product.price * (item.quantity || 1) : 0);
+    }, 0);
+
+    const method = checkoutData.method || 'pix';
+    const transactionId = 'txn_sim_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+    // Gera um QR Code fake (imagem placeholder)
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${transactionId}`;
+
+    const simulatedResponse = {
+      success: true,
+      transaction: {
+        id: transactionId,
+        method: method,
+        status: method === 'pix' ? 'pendente' : 'pago',
+        amount: totalAmount,
+        qrCode: `00020126580014BR.GOV.BCB.PIX0136${transactionId}5204000053039865406${totalAmount}5802BR5913LeaoShop6008BRASILIA62070503***6304ABCD`,
+        qrCodeUrl: qrCodeUrl,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        customer: checkoutData.customer
+      },
+      order: {
+        items: checkoutData.items,
+        total: totalAmount,
+        customer: checkoutData.customer
+      }
+    };
+
+    // Aguarda um pouco para simular processamento
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return simulatedResponse;
   }
 };
 
@@ -102,11 +143,6 @@ export const getCategories = async () => {
     const categories = [...new Set(productsData.map(p => p.category))];
     return { data: categories };
   }
-};
-
-export const createCheckout = async (checkoutData) => {
-  const { data } = await api.post('/checkout', checkoutData);
-  return data;
 };
 
 export default api;
