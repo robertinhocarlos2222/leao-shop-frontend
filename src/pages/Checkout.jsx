@@ -76,7 +76,8 @@ export default function Checkout() {
       clearCart();
     } catch (error) {
       console.error('Erro no checkout:', error);
-      alert('Erro ao processar pagamento. Tente novamente.');
+      const errorMessage = error.response?.data?.error || error.message || 'Erro ao processar pagamento';
+      alert(`Erro: ${errorMessage}\n\nVerifique se o backend está rodando no Render.`);
     } finally {
       setLoading(false);
     }
