@@ -8,6 +8,7 @@ import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import Checkout from './pages/Checkout';
 import Success from './pages/Success';
+import Debug from './pages/Debug';
 
 function App() {
   return (
@@ -20,7 +21,8 @@ function App() {
             <Route path="/produtos" element={<Products />} />
             <Route path="/produto/:id" element={<ProductDetail />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/sucesso" element={<Success />} />
+          <Route path="/sucesso" element={<Success />} />
+          <Route path="/debug" element={<Debug />} />
           </Routes>
         </main>
         <Footer />
