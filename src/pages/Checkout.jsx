@@ -50,6 +50,16 @@ export default function Checkout() {
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
   }
 
+  async function copyToClipboard(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Erro ao copiar:', err);
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
@@ -76,44 +86,9 @@ export default function Checkout() {
       clearCart();
     } catch (error) {
       console.error('Erro no checkout:', error);
-      console.error('Status:', error.response?.status);
-      console.error('Data:', error.response?.data);
-      console.error('URL:', error.config?.url);
-      
-      let errorMessage = 'Erro ao processar pagamento';
-      let details = '';
-      
-      if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
-        errorMessage = 'Backend não encontrado. Verifique se o Render está rodando.';
-      } else if (error.response?.status === 404) {
-        errorMessage = 'API não encontrada. Verifique a URL do backend.';
-      } else if (error.response?.status === 500) {
-        errorMessage = 'Erro interno no servidor (500)';
-        details = error.response?.data?.error || error.response?.data?.message || '';
-        if (!details && error.response?.data?.details) {
-          details = JSON.stringify(error.response.data.details).substring(0, 200);
-        }
-      } else if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
-        details = error.response.data.details ? JSON.stringify(error.response.data.details).substring(0, 200) : '';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      const fullMessage = details ? `${errorMessage}\n\nDetalhes: ${details}` : errorMessage;
-      alert(`Erro: ${fullMessage}\n\nVerifique o console (F12) para mais detalhes.`);
+      alert('Erro: ' + (error.response?.data?.error || error.message || 'Erro ao processar pagamento'));
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function copyToClipboard(text) {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Erro ao copiar:', err);
     }
   }
 
@@ -141,7 +116,6 @@ export default function Checkout() {
                   Escaneie o QR Code ou copie o código PIX para pagar
                 </p>
 
-                {/* QR Code */}
                 {transaction.qrCodeUrl && (
                   <div className="mb-8">
                     <img
@@ -152,7 +126,6 @@ export default function Checkout() {
                   </div>
                 )}
 
-                {/* Copy PIX Code */}
                 {transaction.qrCode && (
                   <div className="space-y-4">
                     <div className="bg-dark-900 rounded-xl p-4 border border-dark-700">
