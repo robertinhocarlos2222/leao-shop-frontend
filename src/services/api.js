@@ -92,47 +92,10 @@ export const getProduct = async (id) => {
   }
 };
 
-// Checkout (com fallback SIMULADO para testar)
+// Checkout (APENAS modo real - backend obrigatório)
 export const createCheckout = async (checkoutData) => {
-  try {
-    const { data } = await api.post('/checkout', checkoutData);
-    return data;
-  } catch {
-    // Simula um checkout bem-sucedido (modo offline/demonstração)
-    const totalAmount = checkoutData.items.reduce((sum, item) => {
-      const product = productsData.find(p => p.id === item.id);
-      return sum + (product ? product.price * (item.quantity || 1) : 0);
-    }, 0);
-
-    const method = checkoutData.method || 'pix';
-    const transactionId = 'txn_sim_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-
-    // Gera um QR Code fake (imagem placeholder)
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${transactionId}`;
-
-    const simulatedResponse = {
-      success: true,
-      transaction: {
-        id: transactionId,
-        method: method,
-        status: method === 'pix' ? 'pendente' : 'pago',
-        amount: totalAmount,
-        qrCode: `00020126580014BR.GOV.BCB.PIX0136${transactionId}5204000053039865406${totalAmount}5802BR5913LeaoShop6008BRASILIA62070503***6304ABCD`,
-        qrCodeUrl: qrCodeUrl,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        customer: checkoutData.customer
-      },
-      order: {
-        items: checkoutData.items,
-        total: totalAmount,
-        customer: checkoutData.customer
-      }
-    };
-
-    // Aguarda um pouco para simular processamento
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return simulatedResponse;
-  }
+  const { data } = await api.post('/checkout', checkoutData);
+  return data;
 };
 
 export const getCategories = async () => {
