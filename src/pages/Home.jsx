@@ -97,6 +97,24 @@ export default function Home() {
                 <Link to="/produtos?brand=Ignite" className="btn-secondary text-lg px-8 py-4 inline-flex items-center justify-center">
                   Ignite Collection
                 </Link>
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('https://leao-shop-backend.onrender.com/api/test-checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({})
+                      });
+                      const data = await response.json();
+                      alert('TESTE DA API:\n\n' + JSON.stringify(data, null, 2));
+                    } catch (error) {
+                      alert('ERRO:\n\n' + error.message);
+                    }
+                  }}
+                  className="btn-secondary text-lg px-8 py-4 inline-flex items-center justify-center"
+                >
+                  🧪 Testar API
+                </button>
               </motion.div>
 
               {/* Stats */}
