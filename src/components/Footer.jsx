@@ -90,6 +90,9 @@ export default function Footer() {
           <p className="text-gray-500 text-sm">
             © 2026 Leão Shop. Todos os direitos reservados.
           </p>
+          <Link to="/admin/login" className="text-xs text-transparent hover:text-transparent">
+            .
+          </Link>
           <div className="flex gap-4 text-xs text-gray-600">
             <span>Produtos originais</span>
             <span>•</span>
