@@ -140,16 +140,20 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Admin Button (discreto) */}
+      {/* Admin Button */}
       <motion.button
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.3 }}
-        whileHover={{ opacity: 1 }}
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 2 }}
         onClick={() => navigate('/admin/login')}
-        className="fixed bottom-4 right-4 z-50 text-gray-500 hover:text-primary-400 text-xs font-mono"
-        title="Admin"
+        className="fixed bottom-6 right-6 z-50 bg-dark-800/80 backdrop-blur-sm border border-dark-600 hover:border-primary-500/50 rounded-2xl px-4 py-3 flex items-center gap-3 group transition-all duration-300 hover:bg-dark-700/80 shadow-lg shadow-black/20"
+        title="Painel Administrativo"
       >
-        ⚙️
+        <span className="text-lg">🛡️</span>
+        <div className="text-left">
+          <p className="text-white text-xs font-heading font-semibold group-hover:text-primary-400 transition-colors">ADMIN</p>
+          <p className="text-gray-500 text-[10px]">Painel de controle</p>
+        </div>
       </motion.button>
 
       {/* Benefits */}
