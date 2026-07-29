@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { HiArrowLeft, HiCreditCard, HiDocumentText, HiCheck, HiClipboard } from 'react-icons/hi';
+import { HiArrowLeft, HiDocumentText, HiCheck, HiClipboard } from 'react-icons/hi';
 import { useCart } from '../context/CartContext';
 import { createCheckout } from '../services/api';
 
@@ -21,16 +21,7 @@ export default function Checkout() {
     email: '',
     document: '',
     phone: '',
-    method: 'pix',
-    installments: 1
-  });
-
-  const [cardData, setCardData] = useState({
-    number: '',
-    holder: '',
-    expMonth: '',
-    expYear: '',
-    cvv: ''
+    method: 'pix'
   });
 
   useEffect(() => {
@@ -42,24 +33,6 @@ export default function Checkout() {
   function handleInputChange(e) {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  }
-
-  function handleCardChange(e) {
-    const { name, value } = e.target;
-    setCardData(prev => ({ ...prev, [name]: value }));
-  }
-
-  function formatCardNumber(value) {
-    const digits = value.replace(/\D/g, '').slice(0, 16);
-    return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
-  }
-
-  function formatExpiry(value) {
-    const digits = value.replace(/\D/g, '').slice(0, 4);
-    if (digits.length >= 2) {
-      return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-    }
-    return digits;
   }
 
   function formatDocument(value) {
@@ -102,17 +75,9 @@ export default function Checkout() {
           name: formData.name,
           email: formData.email,
           document: formData.document.replace(/\D/g, ''),
-          phone: formData.phone.replace(/\D/g, ''),
-          card: formData.method === 'card' ? {
-            number: cardData.number.replace(/\s/g, ''),
-            holder: cardData.holder,
-            expMonth: cardData.expMonth.split('/')[0] || '',
-            expYear: cardData.expYear || cardData.expiry.split('/')[1] || '',
-            cvv: cardData.cvv
-          } : undefined
+          phone: formData.phone.replace(/\D/g, '')
         },
-        method: formData.method,
-        installments: formData.installments
+        method: formData.method
       };
 
       const result = await createCheckout(payload);
@@ -352,7 +317,7 @@ export default function Checkout() {
                   <h2 className="text-xl font-heading font-semibold text-white mb-6">
                     Forma de Pagamento
                   </h2>
-                  <div className="grid md:grid-cols-3 gap-4">
+                  <div className="grid md:grid-cols-2 gap-4">
                     <button
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, method: 'pix' }))}
@@ -366,20 +331,7 @@ export default function Checkout() {
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-4-4 1.41-1.41L11 14.17l6.59-6.59L19 9l-8 8z"/>
                       </svg>
                       <p className={`font-semibold text-sm ${formData.method === 'pix' ? 'text-primary-400' : 'text-gray-300'}`}>PIX</p>
-                      <p className="text-xs text-gray-500 mt-1">Aprovação na hora</p>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, method: 'card' }))}
-                      className={`p-6 rounded-xl border-2 text-center transition-all ${
-                        formData.method === 'card'
-                          ? 'border-primary-500 bg-primary-500/10'
-                          : 'border-dark-700 bg-dark-800 hover:border-primary-500/30'
-                      }`}
-                    >
-                      <HiCreditCard className={`text-3xl mx-auto mb-2 ${formData.method === 'card' ? 'text-primary-400' : 'text-gray-400'}`} />
-                      <p className={`font-semibold text-sm ${formData.method === 'card' ? 'text-primary-400' : 'text-gray-300'}`}>Cartão</p>
-                      <p className="text-xs text-gray-500 mt-1">Parcele em até 12x</p>
+                      <p className="text-xs text-gray-500 mt-1">✅ Aprovação na hora</p>
                     </button>
                     <button
                       type="button"
@@ -392,98 +344,14 @@ export default function Checkout() {
                     >
                       <HiDocumentText className={`text-3xl mx-auto mb-2 ${formData.method === 'boleto' ? 'text-primary-400' : 'text-gray-400'}`} />
                       <p className={`font-semibold text-sm ${formData.method === 'boleto' ? 'text-primary-400' : 'text-gray-300'}`}>Boleto</p>
-                      <p className="text-xs text-gray-500 mt-1">Vence em 3 dias</p>
+                      <p className="text-xs text-gray-500 mt-1">📄 Vence em 3 dias</p>
                     </button>
                   </div>
-
-                  {/* Card Details */}
-                  {formData.method === 'card' && (
-                    <div className="mt-6 space-y-4">
-                      <h3 className="text-lg font-heading font-semibold text-white">Dados do Cartão</h3>
-                      
-                      <div>
-                        <label className="block text-sm text-gray-400 mb-2">Número do Cartão *</label>
-                        <input
-                          type="text"
-                          name="number"
-                          value={cardData.number}
-                          onChange={handleCardChange}
-                          required
-                          placeholder="1234 5678 9012 3456"
-                          maxLength="19"
-                          className="input-field"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm text-gray-400 mb-2">Nome no Cartão *</label>
-                        <input
-                          type="text"
-                          name="holder"
-                          value={cardData.holder}
-                          onChange={handleCardChange}
-                          required
-                          placeholder="JOÃO SILVA"
-                          className="input-field"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-sm text-gray-400 mb-2">Mês *</label>
-                          <input
-                            type="text"
-                            name="expMonth"
-                            value={cardData.expMonth}
-                            onChange={handleCardChange}
-                            required
-                            placeholder="MM"
-                            maxLength="2"
-                            className="input-field"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-400 mb-2">Ano *</label>
-                          <input
-                            type="text"
-                            name="expYear"
-                            value={cardData.expYear}
-                            onChange={handleCardChange}
-                            required
-                            placeholder="YYYY"
-                            maxLength="4"
-                            className="input-field"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-400 mb-2">CVV *</label>
-                          <input
-                            type="text"
-                            name="cvv"
-                            value={cardData.cvv}
-                            onChange={handleCardChange}
-                            required
-                            placeholder="123"
-                            maxLength="4"
-                            className="input-field"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm text-gray-400 mb-2">Parcelas *</label>
-                        <select
-                          value={formData.installments}
-                          onChange={(e) => setFormData(prev => ({ ...prev, installments: parseInt(e.target.value) }))}
-                          className="input-field"
-                        >
-                          {[1,2,3,4,5,6,7,8,9,10,11,12].map(x => (
-                            <option key={x} value={x}>{x}x de {formatPrice(Math.round(cartTotal / x))}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  )}
+                  <div className="mt-6 p-4 bg-primary-500/10 border border-primary-500/20 rounded-xl">
+                    <p className="text-primary-400 text-sm text-center">
+                      💡 Cartão de crédito indisponível no momento. Use PIX para aprovação instantânea!
+                    </p>
+                  </div>
                 </div>
 
                 <button
@@ -498,7 +366,7 @@ export default function Checkout() {
                     </>
                   ) : (
                     <>
-                      <HiCreditCard /> Pagar {formatPrice(cartTotal)}
+                      Pagar {formatPrice(cartTotal)}
                     </>
                   )}
                 </button>
