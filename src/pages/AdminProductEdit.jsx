@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { HiArrowLeft, HiSave, HiTrash } from 'react-icons/hi';
+import { HiArrowLeft, HiSave, HiTrash, HiUpload, HiPhotograph } from 'react-icons/hi';
 
 export default function AdminProductEdit() {
   const navigate = useNavigate();
@@ -19,11 +19,14 @@ export default function AdminProductEdit() {
     battery: '',
     badge: '',
     originalPrice: '',
-    installments: null
+    installments: null,
+    featured: false,
+    flavors: []
   });
   
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
+  const [imagePreview, setImagePreview] = useState('');
 
   useEffect(() => {
     if (!isNew) {
@@ -53,14 +56,44 @@ export default function AdminProductEdit() {
           battery: data.data.battery || '',
           badge: data.data.badge || '',
           originalPrice: data.data.originalPrice || '',
-          installments: data.data.installments || null
+          installments: data.data.installments || null,
+          featured: data.data.featured || false,
+          flavors: data.data.flavors || []
         });
+        setImagePreview(data.data.image || '');
       }
     } catch (error) {
       console.error('Erro ao carregar produto:', error);
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleImageUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validações
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+    if (file.size > maxSize) {
+      alert('Imagem muito grande! Máximo 5MB');
+      return;
+    }
+
+    if (!allowedTypes.includes(file.type)) {
+      alert('Formato inválido! Use JPG, PNG ou WebP');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target.result;
+      setFormData(prev => ({ ...prev, image: base64 }));
+      setImagePreview(base64);
+    };
+    reader.readAsDataURL(file);
   }
 
   async function handleSubmit(e) {
@@ -208,11 +241,44 @@ export default function AdminProductEdit() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm text-gray-400 mb-2">URL da Imagem *</label>
+                <label className="block text-sm text-gray-400 mb-2">Imagem do Produto *</label>
+                
+                {/* Upload de imagem */}
+                <div className="mb-4">
+                  <label className="flex items-center justify-center gap-2 p-6 border-2 border-dashed border-dark-600 rounded-xl cursor-pointer hover:border-primary-500 transition-colors">
+                    <HiUpload className="text-2xl text-gray-400" />
+                    <span className="text-gray-400">Clique para enviar imagem</span>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </label>
+                  <p className="text-xs text-gray-500 mt-1">Formatos: JPG, PNG, WebP (máx. 5MB)</p>
+                </div>
+
+                {/* Preview da imagem */}
+                {imagePreview && (
+                  <div className="mb-4 p-4 bg-dark-800 rounded-xl">
+                    <p className="text-xs text-gray-400 mb-2">Preview:</p>
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-32 h-32 object-contain bg-white rounded-lg"
+                    />
+                  </div>
+                )}
+
+                {/* URL manual */}
+                <label className="block text-sm text-gray-400 mb-2">Ou cole a URL da imagem:</label>
                 <input
                   type="text"
                   value={formData.image}
-                  onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, image: e.target.value }));
+                    setImagePreview(e.target.value);
+                  }}
                   required
                   className="input-field"
                   placeholder="https://exemplo.com/imagem.png"
@@ -282,7 +348,7 @@ export default function AdminProductEdit() {
                 />
               </div>
 
-              <div className="md:col-span-2">
+              <div className="md:col-span-2 grid grid-cols-2 gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -291,6 +357,15 @@ export default function AdminProductEdit() {
                     className="w-5 h-5 rounded bg-dark-700 border-dark-600 text-primary-500 focus:ring-primary-500"
                   />
                   <span className="text-white">Produto ativo</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.featured}
+                    onChange={(e) => setFormData(prev => ({ ...prev, featured: e.target.checked }))}
+                    className="w-5 h-5 rounded bg-dark-700 border-dark-600 text-yellow-500 focus:ring-yellow-500"
+                  />
+                  <span className="text-white">⭐ Produto em destaque (oferta)</span>
                 </label>
               </div>
             </div>

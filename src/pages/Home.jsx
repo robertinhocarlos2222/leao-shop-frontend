@@ -206,6 +206,108 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Ofertas Section */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="text-center mb-12"
+          >
+            <motion.h2 variants={fadeInUp} className="section-title">
+              🔥 <span className="gradient-text">Ofertas</span> Especiais
+            </motion.h2>
+            <motion.p variants={fadeInUp} className="section-subtitle">
+              Aproveite os melhores preços da semana
+            </motion.p>
+          </motion.div>
+
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[1,2,3,4].map(i => (
+                <div key={i} className="card p-6 animate-pulse">
+                  <div className="aspect-square bg-dark-700 rounded-2xl mb-4" />
+                  <div className="h-4 bg-dark-700 rounded w-3/4 mb-2" />
+                  <div className="h-4 bg-dark-700 rounded w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <motion.div
+              initial="initial"
+              whileInView="animate"
+              viewport={{ once: true }}
+              variants={staggerContainer}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+            >
+              {featuredProducts.filter(p => p.featured).slice(0, 4).map((product) => (
+                <motion.div key={product.id} variants={fadeInUp}>
+                  <Link to={`/produto/${product.id}`} className="card-hover block group border-2 border-yellow-500/30 hover:border-yellow-500/50">
+                    <div className="relative aspect-square bg-gradient-to-br from-dark-700 to-dark-800 rounded-2xl overflow-hidden mb-4">
+                      {product.image ? (
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-full object-contain p-6 group-hover:scale-110 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-4xl">
+                          📦
+                        </div>
+                      )}
+                      {product.badge && (
+                        <span className={`absolute top-3 right-3 ${
+                          product.badge === 'LANÇAMENTO' ? 'badge-new' :
+                          product.badge === 'PRÉ-VENDA' ? 'badge-pre' :
+                          product.badge === 'KIT' ? 'badge-kit' : 'badge-promo'
+                        }`}>
+                          {product.badge}
+                        </span>
+                      )}
+                      {product.originalPrice && (
+                        <span className="absolute top-3 left-3 bg-red-500/90 text-white text-xs font-bold px-2 py-1 rounded-full">
+                          -{Math.round((1 - product.price / product.originalPrice) * 100)}%
+                        </span>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-yellow-500/10 to-transparent pointer-events-none" />
+                    </div>
+                    <h3 className="text-white font-heading font-semibold group-hover:text-primary-400 transition-colors">
+                      {product.name}
+                    </h3>
+                    <p className="text-gray-500 text-sm mt-1">
+                      {product.puffs ? `${product.puffs.toLocaleString()} Puffs` : product.battery}
+                    </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-primary-400 font-heading font-bold text-lg">
+                        {formatPrice(product.price)}
+                      </span>
+                      {product.originalPrice && (
+                        <span className="text-gray-600 text-sm line-through">
+                          {formatPrice(product.originalPrice)}
+                        </span>
+                      )}
+                    </div>
+                    {product.installments && (
+                      <p className="text-gray-500 text-xs mt-1">
+                        ou {product.installments.times}x de {formatPrice(product.installments.value)}
+                      </p>
+                    )}
+                  </Link>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+
+          {featuredProducts.filter(p => p.featured).length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-500">Nenhuma oferta especial no momento</p>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Featured Products */}
       <section className="py-20 bg-dark-950/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

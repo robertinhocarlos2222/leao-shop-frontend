@@ -137,11 +137,76 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {/* Ofertas Section */}
+        <div className="card p-8 mb-8 border-2 border-yellow-500/30 bg-gradient-to-br from-yellow-500/5 to-transparent">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-heading font-bold text-white flex items-center gap-2">
+                ⭐ Ofertas em Destaque
+              </h2>
+              <p className="text-gray-400 text-sm mt-1">Produtos que aparecem na seção "Produtos em Destaque" da homepage</p>
+            </div>
+            <button
+              onClick={() => navigate('/admin/products/new')}
+              className="btn-primary inline-flex items-center gap-2"
+            >
+              <HiPlus /> Nova Oferta
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {products.filter(p => p.featured).map((product, index) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-dark-800 rounded-xl p-4 border border-yellow-500/20 hover:border-yellow-500/40 transition-all"
+              >
+                <div className="aspect-square bg-dark-700 rounded-lg mb-3 overflow-hidden">
+                  {product.image ? (
+                    <img src={product.image} alt={product.name} className="w-full h-full object-contain p-2" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-4xl">📦</div>
+                  )}
+                </div>
+                <h3 className="text-white font-semibold text-sm mb-1 truncate">{product.name}</h3>
+                <p className="text-primary-400 font-bold text-lg mb-2">
+                  R$ {(product.price / 100).toFixed(2)}
+                </p>
+                {product.originalPrice && (
+                  <p className="text-red-400 text-xs line-through">
+                    R$ {(product.originalPrice / 100).toFixed(2)}
+                  </p>
+                )}
+                <button
+                  onClick={() => navigate(`/admin/products/${product.id}`)}
+                  className="mt-3 w-full btn-secondary text-xs py-2"
+                >
+                  Editar Oferta
+                </button>
+              </motion.div>
+            ))}
+          </div>
+
+          {products.filter(p => p.featured).length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-500 mb-4">Nenhuma oferta cadastrada</p>
+              <button
+                onClick={() => navigate('/admin/products/new')}
+                className="btn-primary inline-flex items-center gap-2"
+              >
+                <HiPlus /> Criar Primeira Oferta
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Products List */}
         <div className="card p-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-heading font-bold text-white">
-              Produtos
+              Todos os Produtos
             </h2>
             <button
               onClick={() => navigate('/admin/products/new')}
