@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { HiArrowLeft, HiDocumentText, HiCheck, HiClipboard } from 'react-icons/hi';
+import { motion, AnimatePresence } from 'framer-motion';
+import { HiArrowLeft, HiDocumentText, HiCheck, HiClipboard, HiLocationMarker, HiSearch } from 'react-icons/hi';
 import { useCart } from '../context/CartContext';
 import { createCheckout } from '../services/api';
 
@@ -21,8 +21,15 @@ export default function Checkout() {
     email: '',
     document: '',
     phone: '',
-    method: 'pix'
+    method: 'pix',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: ''
   });
+  
+  const [loadingCep, setLoadingCep] = useState(false);
+  const [cepError, setCepError] = useState('');
 
   useEffect(() => {
     if (cartItems.length === 0 && !paymentResult) {
@@ -48,6 +55,48 @@ export default function Checkout() {
     if (digits.length <= 2) return `(${digits}`;
     if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  }
+  
+  function formatCep(value) {
+    const digits = value.replace(/\D/g, '').slice(0, 8);
+    if (digits.length <= 5) return digits;
+    return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+  }
+  
+  async function fetchCep(cep) {
+    const cleanCep = cep.replace(/\D/g, '');
+    if (cleanCep.length !== 8) return;
+    
+    setLoadingCep(true);
+    setCepError('');
+    
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      const data = await response.json();
+      
+      if (data.erro) {
+        setCepError('CEP não encontrado');
+        return;
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        city: data.localidade || '',
+        state: data.uf || '',
+        address: `${data.logradouro || ''}, ${data.bairro || ''}`.trim()
+      }));
+    } catch (error) {
+      setCepError('Erro ao buscar CEP');
+    } finally {
+      setLoadingCep(false);
+    }
+  }
+  
+  function handleCepBlur(e) {
+    const cep = e.target.value.replace(/\D/g, '');
+    if (cep.length === 8) {
+      fetchCep(cep);
+    }
   }
 
   async function copyToClipboard(text) {
@@ -75,7 +124,11 @@ export default function Checkout() {
           name: formData.name,
           email: formData.email,
           document: formData.document.replace(/\D/g, ''),
-          phone: formData.phone.replace(/\D/g, '')
+          phone: formData.phone.replace(/\D/g, ''),
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode.replace(/\D/g, '')
         },
         method: formData.method
       };
@@ -311,6 +364,107 @@ export default function Checkout() {
                     </div>
                   </div>
                 </div>
+
+                {/* Endereço */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="card p-6 md:p-8"
+                >
+                  <h2 className="text-xl font-heading font-semibold text-white mb-6 flex items-center gap-2">
+                    <HiLocationMarker className="text-primary-400" />
+                    Endereço de Entrega
+                  </h2>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm text-gray-400 mb-2">CEP *</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name="zipCode"
+                          value={formData.zipCode}
+                          onChange={(e) => setFormData(prev => ({ ...prev, zipCode: formatCep(e.target.value) }))}
+                          onBlur={handleCepBlur}
+                          required
+                          placeholder="00000-000"
+                          className="input-field pr-10"
+                        />
+                        {loadingCep && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <div className="w-5 h-5 border-2 border-primary-400 border-t-transparent rounded-full animate-spin" />
+                          </div>
+                        )}
+                      </div>
+                      {cepError && (
+                        <motion.p
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="text-red-400 text-xs mt-1"
+                        >
+                          {cepError}
+                        </motion.p>
+                      )}
+                    </div>
+                    
+                    <AnimatePresence>
+                      {formData.city && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          className="md:col-span-2 p-4 bg-green-500/10 border border-green-500/20 rounded-xl"
+                        >
+                          <p className="text-green-400 text-sm flex items-center gap-2">
+                            <HiCheck className="text-lg" />
+                            <span className="font-semibold">CEP encontrado!</span>
+                          </p>
+                          <p className="text-gray-300 text-sm mt-1">
+                            {formData.address && <span>{formData.address}</span>}
+                            {formData.city && <span>, {formData.city}</span>}
+                            {formData.state && <span> - {formData.state}</span>}
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm text-gray-400 mb-2">Endereço Completo</label>
+                      <input
+                        type="text"
+                        name="address"
+                        value={formData.address}
+                        onChange={handleInputChange}
+                        placeholder="Rua, número, complemento"
+                        className="input-field"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-2">Cidade</label>
+                      <input
+                        type="text"
+                        name="city"
+                        value={formData.city}
+                        onChange={handleInputChange}
+                        placeholder="Cidade"
+                        className="input-field"
+                        readOnly={!!formData.city}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-2">Estado</label>
+                      <input
+                        type="text"
+                        name="state"
+                        value={formData.state}
+                        onChange={handleInputChange}
+                        placeholder="UF"
+                        className="input-field"
+                        maxLength={2}
+                        readOnly={!!formData.state}
+                      />
+                    </div>
+                  </div>
+                </motion.div>
 
                 {/* Payment Method */}
                 <div className="card p-6 md:p-8">
