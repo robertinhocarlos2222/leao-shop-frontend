@@ -42,16 +42,24 @@ export default function Navbar() {
             <Link to="/" className="flex items-center gap-3 group">
               <motion.div
                 whileHover={{ scale: 1.1, rotate: [0, -10, 10, 0] }}
-                className="text-3xl"
+                className="w-10 h-10"
               >
-                🦁
+                <img
+                  src="/logo.png"
+                  alt="Leão Shop"
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.innerHTML = '🦁';
+                  }}
+                />
               </motion.div>
               <div>
                 <h1 className="text-2xl font-heading font-bold gradient-text">
                   Leão Shop
                 </h1>
                 <p className="text-[10px] text-gray-500 -mt-1 tracking-widest uppercase">
-                  Pods & Vapes
+                  Premium Vape Co.
                 </p>
               </div>
             </Link>
