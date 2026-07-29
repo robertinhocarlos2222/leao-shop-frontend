@@ -27,9 +27,11 @@ export default function AdminProductEdit() {
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [imagePreview, setImagePreview] = useState('');
+  const [productId, setProductId] = useState(id);
 
   useEffect(() => {
     if (!isNew) {
+      setProductId(id);
       loadProduct();
     }
   }, [id]);
@@ -37,15 +39,23 @@ export default function AdminProductEdit() {
   async function loadProduct() {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`https://leao-shop-backend.onrender.com/api/admin/products/${id}`, {
+      const productIdToLoad = productId || id;
+      
+      console.log('Carregando produto ID:', productIdToLoad);
+      
+      // Adiciona timestamp para evitar cache
+      const timestamp = Date.now();
+      const response = await fetch(`https://leao-shop-backend.onrender.com/api/admin/products/${productIdToLoad}?_t=${timestamp}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
+      
       const data = await response.json();
+      console.log('Dados recebidos:', data);
       
       if (data.success) {
-        setFormData({
+        const productData = {
           name: data.data.name || '',
           price: data.data.price || '',
           image: data.data.image || '',
@@ -59,11 +69,19 @@ export default function AdminProductEdit() {
           installments: data.data.installments || null,
           featured: data.data.featured || false,
           flavors: data.data.flavors || []
-        });
+        };
+        
+        console.log('Atualizando formulário com:', productData);
+        
+        setFormData(productData);
         setImagePreview(data.data.image || '');
+      } else {
+        console.error('Erro ao carregar:', data.error);
+        alert('Erro ao carregar produto: ' + data.error);
       }
     } catch (error) {
       console.error('Erro ao carregar produto:', error);
+      alert('Erro ao carregar produto');
     } finally {
       setLoading(false);
     }
@@ -110,11 +128,14 @@ export default function AdminProductEdit() {
         puffs: formData.puffs ? parseInt(formData.puffs) : null
       };
 
+      const productIdToUse = isNew ? null : (productId || id);
       const url = isNew 
         ? 'https://leao-shop-backend.onrender.com/api/admin/products'
-        : `https://leao-shop-backend.onrender.com/api/admin/products/${id}`;
+        : `https://leao-shop-backend.onrender.com/api/admin/products/${productIdToUse}`;
       
       const method = isNew ? 'POST' : 'PUT';
+
+      console.log('Salvando produto:', productData);
 
       const response = await fetch(url, {
         method,
@@ -126,13 +147,17 @@ export default function AdminProductEdit() {
       });
 
       const data = await response.json();
+      console.log('Resposta:', data);
 
       if (data.success) {
-        navigate('/admin/dashboard');
+        // Recarrega os dados do produto após salvar
+        await loadProduct();
+        alert('Produto salvo com sucesso!');
       } else {
         alert('Erro ao salvar: ' + data.error);
       }
     } catch (error) {
+      console.error('Erro ao salvar:', error);
       alert('Erro ao salvar produto');
     } finally {
       setSaving(false);
@@ -144,7 +169,9 @@ export default function AdminProductEdit() {
 
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`https://leao-shop-backend.onrender.com/api/admin/products/${id}`, {
+      const productIdToDelete = productId || id;
+      
+      const response = await fetch(`https://leao-shop-backend.onrender.com/api/admin/products/${productIdToDelete}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -154,6 +181,7 @@ export default function AdminProductEdit() {
       const data = await response.json();
 
       if (data.success) {
+        alert('Produto deletado com sucesso!');
         navigate('/admin/dashboard');
       } else {
         alert('Erro ao deletar: ' + data.error);
